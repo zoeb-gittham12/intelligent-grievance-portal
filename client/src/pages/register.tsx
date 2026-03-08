@@ -27,9 +27,51 @@ import { motion } from "framer-motion";
 
 const registerSchema = api.auth.register.input;
 
+const PasswordRequirements = ({ password }: { password: string }) => {
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  const isLongEnough = password.length >= 6;
+
+  const allRequirementsMet = hasUppercase && hasLowercase && hasSpecialChar && isLongEnough;
+
+  return (
+    <div className="space-y-2 mt-3 p-3 bg-secondary/30 rounded-lg border border-border/40">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Password Requirements:</p>
+      <div className="space-y-1.5">
+        <div className={`flex items-center gap-2 text-sm transition-colors ${isLongEnough ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+          <div className={`w-4 h-4 rounded-full flex items-center justify-center ${isLongEnough ? "bg-green-600 dark:bg-green-400" : "border border-muted-foreground"}`}>
+            {isLongEnough && <span className="text-white text-xs">✓</span>}
+          </div>
+          <span>At least 6 characters</span>
+        </div>
+        <div className={`flex items-center gap-2 text-sm transition-colors ${hasUppercase ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+          <div className={`w-4 h-4 rounded-full flex items-center justify-center ${hasUppercase ? "bg-green-600 dark:bg-green-400" : "border border-muted-foreground"}`}>
+            {hasUppercase && <span className="text-white text-xs">✓</span>}
+          </div>
+          <span>At least 1 uppercase letter (A-Z)</span>
+        </div>
+        <div className={`flex items-center gap-2 text-sm transition-colors ${hasLowercase ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+          <div className={`w-4 h-4 rounded-full flex items-center justify-center ${hasLowercase ? "bg-green-600 dark:bg-green-400" : "border border-muted-foreground"}`}>
+            {hasLowercase && <span className="text-white text-xs">✓</span>}
+          </div>
+          <span>At least 1 lowercase letter (a-z)</span>
+        </div>
+        <div className={`flex items-center gap-2 text-sm transition-colors ${hasSpecialChar ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+          <div className={`w-4 h-4 rounded-full flex items-center justify-center ${hasSpecialChar ? "bg-green-600 dark:bg-green-400" : "border border-muted-foreground"}`}>
+            {hasSpecialChar && <span className="text-white text-xs">✓</span>}
+          </div>
+          <span>At least 1 special character (!@#$%^&*, etc.)</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Register() {
   const register = useRegister();
   const [, setLocation] = useLocation();
+  const [passwordValue, setPasswordValue] = useState("");
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -162,10 +204,15 @@ export default function Register() {
                             type="password" 
                             placeholder="••••••••" 
                             className="pl-11 h-12 rounded-xl bg-secondary/30 focus:bg-background transition-colors" 
-                            {...field} 
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              setPasswordValue(e.target.value);
+                            }}
                           />
                         </div>
                       </FormControl>
+                      <PasswordRequirements password={passwordValue} />
                       <FormMessage />
                     </FormItem>
                   )}

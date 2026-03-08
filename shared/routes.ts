@@ -26,7 +26,11 @@ export const api = {
       path: "/api/register" as const,
       input: z.object({
         username: z.string().min(3, "Username must be at least 3 characters"),
-        password: z.string().min(6, "Password must be at least 6 characters"),
+        password: z.string()
+          .min(6, "Password must be at least 6 characters")
+          .regex(/[A-Z]/, "Password must contain at least 1 uppercase letter")
+          .regex(/[a-z]/, "Password must contain at least 1 lowercase letter")
+          .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, "Password must contain at least 1 special character"),
         role: z.enum(["Student", "Faculty", "HOD", "Admin"]),
         department: z.string().optional()
       }),
