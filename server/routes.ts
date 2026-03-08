@@ -32,7 +32,38 @@ export async function registerRoutes(
     })
   );
 
-  // Auth Routes
+  // Auth Routes - Register
+  app.post(api.auth.register.path, async (req, res) => {
+    try {
+      const input = api.auth.register.input.parse(req.body);
+      
+      // Check if user already exists
+      const existing = await storage.getUserByUsername(input.username);
+      if (existing) {
+        return res.status(409).json({ message: "Username already exists" });
+      }
+
+      const user = await storage.createUser({
+        username: input.username,
+        password: input.password,
+        role: input.role,
+        department: input.department || null
+      });
+
+      req.session.userId = user.id;
+      res.status(201).json(user);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Auth Routes - Login
   app.post(api.auth.login.path, async (req, res) => {
     try {
       const input = api.auth.login.input.parse(req.body);

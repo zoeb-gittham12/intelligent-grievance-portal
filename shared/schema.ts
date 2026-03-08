@@ -44,3 +44,6 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Complaint = typeof complaints.$inferSelect;
 export type InsertComplaint = z.infer<typeof insertComplaintSchema>;
 export type ComplaintUpdate = Partial<Complaint>;
+
+export const ROLES = ["Student", "Faculty", "HOD", "Admin"] as const;
+export type UserRole = typeof ROLES[number];

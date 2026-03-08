@@ -63,6 +63,46 @@ export function useLogin() {
   });
 }
 
+export function useRegister() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  return useMutation({
+    mutationFn: async (data: { username: string; password: string; role: string; department?: string }) => {
+      const validated = api.auth.register.input.parse(data);
+      const res = await fetch(api.auth.register.path, {
+        method: api.auth.register.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(validated),
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        if (res.status === 409) throw new Error("Username already exists");
+        const error = await res.json();
+        throw new Error(error.message || "Failed to register");
+      }
+      return api.auth.register.responses[201].parse(await res.json());
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData([api.auth.me.path], user);
+      toast({
+        title: "Account created!",
+        description: `Welcome ${user.username}! You are now logged in as ${user.role}.`,
+      });
+      setLocation("/");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Registration Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
   const { toast } = useToast();

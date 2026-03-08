@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import Dashboard from "./pages/dashboard";
 import ComplaintDetail from "./pages/complaint-detail";
 import Login from "./pages/login";
+import Register from "./pages/register";
 import NotFound from "./pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
@@ -37,6 +38,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       <Route path="/">
         {(params) => <ProtectedRoute component={Dashboard} />}
       </Route>

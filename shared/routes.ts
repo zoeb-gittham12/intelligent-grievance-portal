@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { insertUserSchema, insertComplaintSchema, users, complaints } from "./schema";
+import { insertUserSchema, insertComplaintSchema, users, complaints, ROLES, type User } from "./schema";
 
-export { insertUserSchema, insertComplaintSchema };
+export { insertUserSchema, insertComplaintSchema, ROLES, type User };
 
 export const errorSchemas = {
   validation: z.object({
@@ -21,6 +21,21 @@ export const errorSchemas = {
 
 export const api = {
   auth: {
+    register: {
+      method: "POST" as const,
+      path: "/api/register" as const,
+      input: z.object({
+        username: z.string().min(3, "Username must be at least 3 characters"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        role: z.enum(["Student", "Faculty", "HOD", "Admin"]),
+        department: z.string().optional()
+      }),
+      responses: {
+        201: z.custom<typeof users.$inferSelect>(),
+        400: errorSchemas.validation,
+        409: z.object({ message: z.string() })
+      }
+    },
     login: {
       method: "POST" as const,
       path: "/api/login" as const,
