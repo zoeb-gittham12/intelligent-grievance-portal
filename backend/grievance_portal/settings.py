@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'analytics',
     'ai_engine',
     'security',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -120,3 +121,22 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+import os
+
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'ai_logs.log'),
+        },
+    },
+    'loggers': {
+        'ai_engine': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
