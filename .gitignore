@@ -4,3 +4,5 @@ __pycache__/
 db.sqlite3
 .env
 node_modules/
+backend/ai_engine/ai_logs.log
+backend/ai_logs.log
