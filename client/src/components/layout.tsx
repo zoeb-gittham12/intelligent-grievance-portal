@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth, useLogout } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { 
@@ -25,7 +25,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { user } = useAuth();
   const logout = useLogout();
-  const [location] = useLocation();
+  const location = useLocation();
 
   if (!user) return <>{children}</>;
 
@@ -39,7 +39,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
         
         <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-          <Link href="/" className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium ${location === "/" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"}`}>
+          <Link to="/dashboard" className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium ${location.pathname === "/dashboard" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"}`}>
             <LayoutDashboard className="w-5 h-5 mr-3" />
             Dashboard
           </Link>
@@ -82,7 +82,7 @@ export function Layout({ children }: LayoutProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/" className="cursor-pointer">
+                <Link to="/dashboard" className="cursor-pointer">
                   <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
                 </Link>
               </DropdownMenuItem>

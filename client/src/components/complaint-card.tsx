@@ -1,7 +1,7 @@
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { type Complaint } from "@shared/routes";
+import { type Complaint } from "@shared/schema";
 import { StatusBadge } from "./status-badge";
 import { PriorityBadge } from "./priority-badge";
 import { ChevronRight, Calendar, Tag } from "lucide-react";
@@ -19,7 +19,7 @@ export function ComplaintCard({ complaint, index }: ComplaintCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
     >
-      <Link href={`/complaints/${complaint.id}`}>
+      <Link to={`/complaints/${complaint.id}`}>
         <Card className="group relative overflow-hidden rounded-2xl border border-border/60 hover:border-primary/30 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer h-full flex flex-col bg-card">
           {/* Subtle gradient strip on top based on priority */}
           <div className={`h-1.5 w-full absolute top-0 left-0 ${

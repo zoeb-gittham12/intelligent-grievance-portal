@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useRegister } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ShieldAlert, Sparkles, Loader2, Lock, User, BookOpen } from "lucide-react";
+import { ShieldAlert, Sparkles, Loader2, Lock, User, BookOpen, CheckCircle } from "lucide-react";
 import { api, ROLES } from "@shared/routes";
 import { motion } from "framer-motion";
 
@@ -69,9 +68,21 @@ const PasswordRequirements = ({ password }: { password: string }) => {
 };
 
 export default function Register() {
-  const register = useRegister();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [passwordValue, setPasswordValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (showSuccessModal) {
+      timeout = setTimeout(() => {
+        navigate("/");
+      }, 2000);
+    }
+    return () => clearTimeout(timeout);
+  }, [showSuccessModal, navigate]);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -83,12 +94,87 @@ export default function Register() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof registerSchema>) => {
-    register.mutate(data);
+  const handleRegister = async () => {
+    const data = form.getValues();
+    
+    if (!data.username || !data.password || !data.role) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    try {
+      const payload = {
+        username: data.username,
+        password: data.password,
+        role: data.role,
+        department: data.department
+      };
+
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      
+      if (!response.ok) {
+        setError(result.message || "Registration failed");
+        return;
+      }
+      
+      setShowSuccessModal(true);
+    } catch (err) {
+      setError("Network error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex w-full bg-background overflow-hidden">
+      {/* Success Modal Overlay */}
+      {showSuccessModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => navigate("/")}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
+            className="bg-card border border-border/60 shadow-2xl rounded-3xl p-10 max-w-sm w-full mx-4 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-center mb-6">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2, duration: 0.5, bounce: 0.4 }}
+                className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center"
+              >
+                <CheckCircle className="w-12 h-12 text-green-500" />
+              </motion.div>
+            </div>
+            <h3 className="text-2xl font-display font-bold text-foreground mb-2">
+              Account Created Successfully!
+            </h3>
+            <p className="text-muted-foreground mb-8">
+              Welcome to SmartGrievance
+            </p>
+            <Button
+              onClick={() => navigate("/")}
+              className="w-full h-12 rounded-xl text-md font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
+            >
+              Continue
+            </Button>
+            <p className="text-xs text-muted-foreground mt-4">Redirecting automatically in 2 seconds…</p>
+          </motion.div>
+        </motion.div>
+      )}
       {/* Left side - Branding/Info */}
       <div className="hidden lg:flex flex-1 flex-col justify-between p-12 bg-primary text-primary-foreground relative overflow-hidden">
         {/* Abstract Background Shapes */}
@@ -144,7 +230,7 @@ export default function Register() {
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <form className="space-y-5">
                 <FormField
                   control={form.control}
                   name="role"
@@ -236,14 +322,21 @@ export default function Register() {
                   )}
                 />
 
+                {error && (
+                  <div className="p-3 text-sm font-medium text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl mt-2 text-center">
+                    {error}
+                  </div>
+                )}
+
                 <div className="pt-4">
                   <Button 
-                    type="submit" 
+                    type="button"
+                    onClick={handleRegister}
                     className="w-full h-12 rounded-xl text-md font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5" 
-                    disabled={register.isPending}
+                    disabled={isLoading}
                   >
-                    {register.isPending ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                    {isLoading ? (
+                      <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Creating...</>
                     ) : (
                       "Create Account"
                     )}
@@ -256,7 +349,7 @@ export default function Register() {
               <p className="text-sm text-muted-foreground">
                 Already have an account? <br />
                 <button 
-                  onClick={() => setLocation("/login")}
+                  onClick={() => navigate("/student/login")}
                   className="text-primary font-semibold hover:underline"
                 >
                   Sign in instead

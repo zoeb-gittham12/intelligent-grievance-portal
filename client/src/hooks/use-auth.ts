@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type User } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
-
+import { useNavigate } from "react-router-dom";
 export function useAuth() {
   const { data: user, isLoading, error } = useQuery<User | null>({
     queryKey: [api.auth.me.path],
@@ -27,7 +26,7 @@ export function useAuth() {
 export function useLogin() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: async (credentials: { username: string; password: string }) => {
@@ -51,7 +50,7 @@ export function useLogin() {
         title: "Welcome back!",
         description: `Logged in successfully as ${user.role}.`,
       });
-      setLocation("/");
+      navigate("/dashboard");
     },
     onError: (error: Error) => {
       toast({
@@ -66,10 +65,10 @@ export function useLogin() {
 export function useRegister() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: async (data: { username: string; password: string; role: string; department?: string }) => {
+    mutationFn: async (data: { fullName: string; email: string; username: string; password: string; role?: string; department?: string }) => {
       const validated = api.auth.register.input.parse(data);
       const res = await fetch(api.auth.register.path, {
         method: api.auth.register.method,
@@ -91,7 +90,7 @@ export function useRegister() {
         title: "Account created!",
         description: `Welcome ${user.username}! You are now logged in as ${user.role}.`,
       });
-      setLocation("/");
+      navigate("/dashboard");
     },
     onError: (error: Error) => {
       toast({
@@ -106,7 +105,7 @@ export function useRegister() {
 export function useLogout() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: async () => {
@@ -123,7 +122,7 @@ export function useLogout() {
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
-      setLocation("/login");
+      navigate("/");
     },
   });
 }

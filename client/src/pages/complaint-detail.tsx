@@ -1,4 +1,4 @@
-import { useRoute, Link } from "wouter";
+import { useParams, Link } from "react-router-dom";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { useComplaint, useUpdateComplaintStatus } from "@/hooks/use-complaints";
@@ -13,7 +13,7 @@ import { ArrowLeft, Calendar, Loader2, Tag, User as UserIcon, Clock } from "luci
 import { motion } from "framer-motion";
 
 export default function ComplaintDetail() {
-  const [, params] = useRoute("/complaints/:id");
+  const params = useParams<{id: string}>();
   const complaintId = params?.id ? parseInt(params.id) : 0;
   
   const { user } = useAuth();
@@ -33,7 +33,7 @@ export default function ComplaintDetail() {
       <Layout>
         <div className="text-center py-20">
           <h2 className="text-2xl font-bold mb-4">Grievance not found</h2>
-          <Button asChild><Link href="/">Return to Dashboard</Link></Button>
+          <Button asChild><Link to="/dashboard">Return to Dashboard</Link></Button>
         </div>
       </Layout>
     );
@@ -53,7 +53,7 @@ export default function ComplaintDetail() {
         transition={{ duration: 0.4 }}
         className="max-w-4xl mx-auto"
       >
-        <Link href="/">
+        <Link to="/">
           <Button variant="ghost" className="mb-6 -ml-4 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
           </Button>

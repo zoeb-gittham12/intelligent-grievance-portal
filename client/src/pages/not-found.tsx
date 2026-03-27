@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
 import { ShieldAlert } from "lucide-react";
@@ -16,7 +16,7 @@ export default function NotFound() {
           The page you are looking for doesn't exist or has been moved.
         </p>
         <Button asChild className="rounded-xl px-8 shadow-md">
-          <Link href="/">Return to Dashboard</Link>
+          <Link to="/dashboard">Return to Dashboard</Link>
         </Button>
       </div>
     </div>

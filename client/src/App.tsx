@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect } from "wouter";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,58 +7,39 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
 // Pages
+import LandingPage from "./pages/landing";
+import StudentLogin from "./pages/student-login";
+import AdminLogin from "./pages/admin-login";
 import Dashboard from "./pages/dashboard";
-import ComplaintDetail from "./pages/complaint-detail";
-import Login from "./pages/login";
+import StudentDashboard from "./pages/student-dashboard";
+import AdminDashboard from "./pages/admin-dashboard";
 import Register from "./pages/register";
+import RoleSelection from "./pages/role-selection";
+import ComplaintDetail from "./pages/complaint-detail";
 import NotFound from "./pages/not-found";
 
-function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4 text-primary">
-          <Loader2 className="w-10 h-10 animate-spin" />
-          <p className="font-medium animate-pulse">Loading workspace...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Redirect to="/login" />;
-  }
-
-  return <Component {...rest} />;
-}
-
-function Router() {
-  return (
-    <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/">
-        {(params) => <ProtectedRoute component={Dashboard} />}
-      </Route>
-      <Route path="/complaints/:id">
-        {(params) => <ProtectedRoute component={ComplaintDetail} />}
-      </Route>
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/student/login" element={<StudentLogin />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/select-role" element={<RoleSelection />} />
+            
+            {/* Keeping existing routes for compatibility */}
+            <Route path="/complaints/:id" element={<ComplaintDetail />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;

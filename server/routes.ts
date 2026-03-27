@@ -5,6 +5,10 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+// @ts-ignore
+import User from "../models/User.js";
 
 // Extend express-session type to include user id
 declare module "express-session" {
@@ -32,20 +36,94 @@ export async function registerRoutes(
     })
   );
 
-  // Auth Routes - Register
+  app.post('/api/register', async (req, res) => {
+    try {
+      const { username, password, role, department } = req.body;
+
+      if (!username || !password) {
+        return res.status(400).json({ success: false, message: "Username and password are required" });
+      }
+
+      // Check for existing username
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ success: false, message: "Username already taken" });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      // fullName and email are required by the DB schema but not collected by the register form,
+      // so we generate sensible defaults from the username.
+      const newUser = await storage.createUser({
+        username,
+        password: hashedPassword,
+        role: role || "Student",
+        department: department || null,
+        fullName: username,
+        email: `${username}@smartgrievance.local`,
+      });
+
+      res.status(201).json({ success: true, message: "Account created", userId: newUser.id });
+    } catch (err) {
+      console.error("Registration Error:", err);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  });
+
+  app.post('/api/login', async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      const user = await User.findOne({ username });
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const isValid = await bcrypt.compare(password, user.password);
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const token = jwt.sign(
+        { userId: user._id, role: user.role },
+        process.env.JWT_SECRET || "super-secret-key",
+        { expiresIn: "1h" }
+      );
+
+      res.json({ token, role: user.role });
+    } catch (err) {
+      console.error("Login Error with Mongoose:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Auth Routes - Register (Legacy)
   app.post(api.auth.register.path, async (req, res) => {
     try {
       const input = api.auth.register.input.parse(req.body);
       
-      // Check if user already exists
-      const existing = await storage.getUserByUsername(input.username);
-      if (existing) {
+      // Check if username exists
+      const existingUser = await storage.getUserByUsername(input.username);
+      if (existingUser) {
         return res.status(409).json({ message: "Username already exists" });
       }
 
+      // Check if email exists
+      const existingEmail = await storage.getUserByEmail(input.email);
+      if (existingEmail) {
+        return res.status(409).json({ message: "Email already exists" });
+      }
+
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(input.password, salt);
+
       const user = await storage.createUser({
+        fullName: input.fullName,
+        email: input.email,
         username: input.username,
-        password: input.password,
+        password: hashedPassword,
         role: input.role,
         department: input.department || null
       });
@@ -59,6 +137,7 @@ export async function registerRoutes(
           field: err.errors[0].path.join('.'),
         });
       }
+      console.error("Registration Error:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -69,7 +148,17 @@ export async function registerRoutes(
       const input = api.auth.login.input.parse(req.body);
       const user = await storage.getUserByUsername(input.username);
       
-      if (!user || user.password !== input.password) {
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Enforce strict role validation if requested by the frontend
+      if (input.role && user.role.toLowerCase() !== input.role.toLowerCase()) {
+        return res.status(401).json({ message: `Access Denied: Invalid role alignment. Expected ${user.role}.` });
+      }
+
+      const isValid = await bcrypt.compare(input.password, user.password);
+      if (!isValid) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
@@ -194,8 +283,10 @@ export async function registerRoutes(
   async function seedDatabase() {
     const existingUsers = await storage.getUserByUsername("admin");
     if (!existingUsers) {
-      const admin = await storage.createUser({ username: "admin", password: "password", role: "Admin", department: "Central" });
-      const student1 = await storage.createUser({ username: "student1", password: "password", role: "Student", department: "Computer Science" });
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash("password", salt);
+      const admin = await storage.createUser({ fullName: "System Admin", email: "admin@example.com", username: "admin", password: hashedPassword, role: "Admin", department: "Central" });
+      const student1 = await storage.createUser({ fullName: "Student One", email: "student1@example.com", username: "student1", password: hashedPassword, role: "Student", department: "Computer Science" });
       
       await storage.createComplaint({
         title: "No WiFi in Room 204",

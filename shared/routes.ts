@@ -25,13 +25,15 @@ export const api = {
       method: "POST" as const,
       path: "/api/register" as const,
       input: z.object({
+        fullName: z.string().min(1, "Full name is required"),
+        email: z.string().email("Invalid email address"),
         username: z.string().min(3, "Username must be at least 3 characters"),
         password: z.string()
           .min(6, "Password must be at least 6 characters")
           .regex(/[A-Z]/, "Password must contain at least 1 uppercase letter")
           .regex(/[a-z]/, "Password must contain at least 1 lowercase letter")
           .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, "Password must contain at least 1 special character"),
-        role: z.enum(["Student", "Faculty", "HOD", "Admin"]),
+        role: z.enum(["Student", "Faculty", "HOD", "Admin"]).optional().default("Student"),
         department: z.string().optional()
       }),
       responses: {
@@ -45,7 +47,8 @@ export const api = {
       path: "/api/login" as const,
       input: z.object({
         username: z.string(),
-        password: z.string()
+        password: z.string(),
+        role: z.string().optional()
       }),
       responses: {
         200: z.custom<typeof users.$inferSelect>(),
