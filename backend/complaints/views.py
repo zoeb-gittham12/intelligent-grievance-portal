@@ -18,7 +18,15 @@ def create_complaint(request):
         description = serializer.validated_data['description']
 
         # 🔥 Call AI automatically
-        ai_result = analyze_complaint_text(description)
+        try:
+            ai_result = analyze_complaint_text(description)
+        except Exception:
+                    ai_result = {
+                        "department": "general",
+                        "priority": "Medium",
+                        "confidence": 0.0,
+                        "source": "fallback"
+                    }
 
         complaint = serializer.save(
             department=ai_result.get('department'),
@@ -34,4 +42,11 @@ def create_complaint(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Create your views here.
+@api_view(['GET'])
+def list_complaints(request):
+
+    complaints = Complaint.objects.all().order_by('-created_at')
+
+    serializer = ComplaintSerializer(complaints, many=True)
+
+    return Response(serializer.data)

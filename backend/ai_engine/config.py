@@ -1,1 +1,1 @@
-AI_MODE = "ml"  # options: "local", "ml"
+AI_MODE = "ml"  # options: "local", "ml"S

@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import create_complaint
+from .views import create_complaint, list_complaints
 
 urlpatterns = [
-    path('create/', create_complaint),
+    path('', list_complaints),        # GET all complaints
+    path('create/', create_complaint) # POST new complaint
 ]
