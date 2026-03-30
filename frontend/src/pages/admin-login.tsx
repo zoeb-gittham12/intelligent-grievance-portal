@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Terminal, Lock, ArrowRight, ShieldAlert } from "lucide-react";
-
+import React from "react";
 export default function AdminLogin() {
   const navigate = useNavigate();
 
@@ -39,7 +39,7 @@ export default function AdminLogin() {
               />
             </div>
           </div>
-          
+
           <div className="flex flex-col gap-2">
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
@@ -52,8 +52,8 @@ export default function AdminLogin() {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold rounded-xl py-3.5 mt-2 transition-all flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.2)]"
           >
             Login as Administrator <ArrowRight className="w-5 h-5" />

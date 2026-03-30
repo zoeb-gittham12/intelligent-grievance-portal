@@ -8,6 +8,7 @@ import { ChevronRight, Calendar, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface ComplaintCardProps {
+  key?: string | number;
   complaint: Complaint;
   index: number;
 }

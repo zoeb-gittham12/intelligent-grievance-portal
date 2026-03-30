@@ -10,9 +10,9 @@ export function useComplaints(filters?: { status?: string; department?: string }
       const params = new URLSearchParams();
       if (filters?.status) params.append("status", filters.status);
       if (filters?.department) params.append("department", filters.department);
-      
+
       const url = `${api.complaints.list.path}${params.toString() ? `?${params.toString()}` : ''}`;
-      
+
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch complaints");
       const data = await res.json();
@@ -44,8 +44,8 @@ export function useCreateComplaint() {
   return useMutation({
     mutationFn: async (data: InsertComplaint) => {
       const validated = api.complaints.create.input.parse(data);
-      const res = await fetch(api.complaints.create.path, {
-        method: api.complaints.create.method,
+      const res = await fetch("/api/complaints/create/", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(validated),
         credentials: "include",
@@ -55,7 +55,7 @@ export function useCreateComplaint() {
         if (res.status === 400) throw new Error("Validation failed");
         throw new Error("Failed to create complaint");
       }
-      return api.complaints.create.responses[201].parse(await res.json());
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.complaints.list.path] });
@@ -82,7 +82,7 @@ export function useUpdateComplaintStatus() {
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
       const validated = api.complaints.updateStatus.input.parse({ status });
       const url = buildUrl(api.complaints.updateStatus.path, { id });
-      
+
       const res = await fetch(url, {
         method: api.complaints.updateStatus.method,
         headers: { "Content-Type": "application/json" },

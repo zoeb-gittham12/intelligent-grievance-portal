@@ -1,4 +1,5 @@
 from django.db import models
+from ai_engine.services import analyze_complaint_text
 
 
 class Complaint(models.Model):
@@ -47,6 +48,17 @@ class Complaint(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            result = analyze_complaint_text(self.description)
+
+            self.department = result["department"]
+            self.priority = result["priority"]
+            self.ai_confidence = result["confidence"]
+            self.ai_source = result["source"]
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title

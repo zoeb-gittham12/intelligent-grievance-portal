@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { api } from "@shared/routes";
 import { motion } from "framer-motion";
 import { ShieldAlert, Terminal, User, Lock, Loader2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Login() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [role, setRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,15 +31,20 @@ export default function Login() {
     }
   }, []);
 
-  const form = useForm<z.infer<typeof api.auth.login.input>>({
-    resolver: zodResolver(api.auth.login.input),
+  const loginSchema = z.object({
+    username: z.string().min(3),
+    password: z.string().min(3),
+  });
+
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof api.auth.login.input>) => {
+  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     setError("");
     try {
@@ -49,22 +54,22 @@ export default function Login() {
         body: JSON.stringify(data),
       });
       const result = await response.json();
-      
+
       if (!response.ok) {
         setError(result.message || "Invalid credentials");
         return;
       }
-      
+
       localStorage.setItem("token", result.token);
       localStorage.setItem("role", result.role);
-      
+
       const pathRole = String(result.role).toLowerCase();
       if (pathRole === "student") {
-        setLocation("/student/dashboard");
+        navigate("/student/dashboard");
       } else if (pathRole === "admin") {
-        setLocation("/admin/dashboard");
+        navigate("/admin/dashboard");
       } else {
-        setLocation("/");
+        navigate("/");
       }
     } catch (err) {
       setError("Network error occurred");
@@ -76,7 +81,8 @@ export default function Login() {
   return (
     <div className="min-h-screen relative flex items-center justify-center bg-[#8a9a6a] overflow-hidden">
       {/* Retro Cassette Aesthetics Base CSS */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         :root {
           --ink: #1a1e12;
           --paper: #c8cc9a;
@@ -198,14 +204,14 @@ export default function Login() {
       <div className="scanlines" />
       <div className="blueprint-grid" />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 50, rotate: -1 }}
         animate={{ opacity: 1, y: 0, rotate: 0 }}
         transition={{ duration: 0.5, type: "spring" }}
         className="w-full max-w-xl px-4 z-20"
       >
         <div className="cassette-deck p-6 md:p-8 flex flex-col gap-6 font-tech text-[#1a1e12]">
-          
+
           {/* Deck Header */}
           <div className="flex justify-between items-start border-b-2 border-[#1a1e12] pb-4">
             <div>
@@ -241,13 +247,13 @@ export default function Login() {
               </div>
               <div className="cassette-reel" style={{ animationDirection: "reverse" }}></div>
             </div>
-            
+
             {/* Audio Level Indicator */}
             <div className="w-full h-3 border border-[#b8cc6a]/40 rounded-sm overflow-hidden flex gap-1 p-0.5">
-              {Array.from({length: 25}).map((_, i) => (
-                <div 
-                  key={i} 
-                  className="flex-1 bg-[#b8cc6a]" 
+              {Array.from({ length: 25 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-1 bg-[#b8cc6a]"
                   style={{ opacity: Math.random() > 0.3 ? 1 : 0.2 }}
                 />
               ))}
@@ -268,10 +274,10 @@ export default function Login() {
                   />
                 </div>
                 {form.formState.errors.username && (
-                   <div className="text-red-700 text-xs mt-1 font-bold">{form.formState.errors.username.message}</div>
+                  <div className="text-red-700 text-xs mt-1 font-bold">{form.formState.errors.username.message}</div>
                 )}
               </div>
-              
+
               <div className="relative flex flex-col">
                 <label className="text-sm font-bold mb-1 uppercase tracking-widest">Passphrase</label>
                 <div className="relative">
@@ -284,13 +290,13 @@ export default function Login() {
                   />
                 </div>
                 {form.formState.errors.password && (
-                   <div className="text-red-700 text-xs mt-1 font-bold">{form.formState.errors.password.message}</div>
+                  <div className="text-red-700 text-xs mt-1 font-bold">{form.formState.errors.password.message}</div>
                 )}
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="btn-tech w-full py-5 text-2xl font-bebas tracking-[0.2em] flex justify-center items-center gap-3 mt-4"
             >
@@ -306,7 +312,7 @@ export default function Login() {
           <div className="flex justify-between items-center text-[10px] font-bold border-t-2 border-[#1a1e12] pt-4 mt-2 tracking-widest uppercase">
             <div>SYS.MODE: {error ? <span className="text-red-700 font-extrabold text-[12px]">ERROR</span> : "READY"}</div>
             {error && <div className="text-red-700 font-bold">{error}</div>}
-            <button onClick={() => setLocation("/register")} className="hover:underline flex items-center gap-1 font-extrabold text-[#1a1e12]">
+            <button onClick={() => navigate("/register")} className="hover:underline flex items-center gap-1 font-extrabold text-[#1a1e12]">
               Create New Record <ArrowRight className="w-3 h-3" />
             </button>
           </div>

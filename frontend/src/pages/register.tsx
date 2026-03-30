@@ -21,11 +21,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ShieldAlert, Sparkles, Loader2, Lock, User, BookOpen, CheckCircle } from "lucide-react";
-import { api, ROLES } from "@shared/routes";
 import { motion } from "framer-motion";
 
-const registerSchema = api.auth.register.input;
-
+const registerSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.string(),
+  department: z.string().optional(),
+});
 const PasswordRequirements = ({ password }: { password: string }) => {
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
@@ -96,7 +99,7 @@ export default function Register() {
 
   const handleRegister = async () => {
     const data = form.getValues();
-    
+
     if (!data.username || !data.password || !data.role) {
       setError("Please fill in all required fields.");
       return;
@@ -118,12 +121,12 @@ export default function Register() {
         body: JSON.stringify(payload),
       });
       const result = await response.json();
-      
+
       if (!response.ok) {
         setError(result.message || "Registration failed");
         return;
       }
-      
+
       setShowSuccessModal(true);
     } catch (err) {
       setError("Network error occurred");
@@ -210,7 +213,7 @@ export default function Register() {
 
       {/* Right side - Register Form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -265,10 +268,10 @@ export default function Register() {
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input 
-                            placeholder="Choose a unique username" 
-                            className="pl-11 h-12 rounded-xl bg-secondary/30 focus:bg-background transition-colors" 
-                            {...field} 
+                          <Input
+                            placeholder="Choose a unique username"
+                            className="pl-11 h-12 rounded-xl bg-secondary/30 focus:bg-background transition-colors"
+                            {...field}
                           />
                         </div>
                       </FormControl>
@@ -276,7 +279,7 @@ export default function Register() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="password"
@@ -286,10 +289,10 @@ export default function Register() {
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            className="pl-11 h-12 rounded-xl bg-secondary/30 focus:bg-background transition-colors" 
+                          <Input
+                            type="password"
+                            placeholder="••••••••"
+                            className="pl-11 h-12 rounded-xl bg-secondary/30 focus:bg-background transition-colors"
                             {...field}
                             onChange={(e) => {
                               field.onChange(e);
@@ -311,10 +314,10 @@ export default function Register() {
                     <FormItem>
                       <FormLabel className="text-foreground font-semibold">Department (Optional)</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="e.g., Computer Science, Engineering" 
-                          className="h-12 rounded-xl bg-secondary/30 focus:bg-background transition-colors" 
-                          {...field} 
+                        <Input
+                          placeholder="e.g., Computer Science, Engineering"
+                          className="h-12 rounded-xl bg-secondary/30 focus:bg-background transition-colors"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -329,10 +332,10 @@ export default function Register() {
                 )}
 
                 <div className="pt-4">
-                  <Button 
+                  <Button
                     type="button"
                     onClick={handleRegister}
-                    className="w-full h-12 rounded-xl text-md font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5" 
+                    className="w-full h-12 rounded-xl text-md font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -344,11 +347,11 @@ export default function Register() {
                 </div>
               </form>
             </Form>
-            
+
             <div className="mt-8 pt-6 border-t border-border/50 text-center">
               <p className="text-sm text-muted-foreground">
                 Already have an account? <br />
-                <button 
+                <button
                   onClick={() => navigate("/student/login")}
                   className="text-primary font-semibold hover:underline"
                 >

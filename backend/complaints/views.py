@@ -45,7 +45,22 @@ def create_complaint(request):
 @api_view(['GET'])
 def list_complaints(request):
 
-    complaints = Complaint.objects.all().order_by('-created_at')
+    complaints = Complaint.objects.all()
+
+    status_filter = request.GET.get('status')
+    department_filter = request.GET.get('department')
+    priority_filter = request.GET.get('priority')
+
+    if status_filter:
+        complaints = complaints.filter(status=status_filter)
+
+    if department_filter:
+        complaints = complaints.filter(department=department_filter)
+
+    if priority_filter:
+        complaints = complaints.filter(priority=priority_filter)
+
+    complaints = complaints.order_by('-created_at')
 
     serializer = ComplaintSerializer(complaints, many=True)
 
